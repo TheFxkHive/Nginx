@@ -27,9 +27,6 @@ static ngx_command_t ngx_http_hls_commands[] = {
     ngx_null_command
 };
 
-
-//static int ngx_hls_request_times = 0;
-
 static ngx_http_module_t ngx_http_hls_module_ctx = {
     NULL,
     ngx_http_hls_init,
@@ -64,14 +61,13 @@ void ngx_http_hls_get_path(ngx_http_request_t *r,ngx_str_t *path)
 	ngx_http_core_loc_conf_t  *clcf;
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
-	//printf("data:%s len:%d\n", clcf->root.data, (int)clcf->root.len);
+	
 	if(!clcf) {
 		return;
 	}
-
+	
 	ngx_cpystrn((u_char*)path->data, (u_char*)clcf->root.data, clcf->root.len + 1);
 	path->len = clcf->root.len;
-	//printf("path: %s\n", path->data);
 	
 }
 void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
@@ -102,17 +98,16 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 	}
 
 	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXTM3U\n") - m3u8->data;
-	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-VERSION:3\n") - m3u8->data;      
+	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-VERSION:2\n") - m3u8->data;      
 	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-TARGETDURATION:10\n") - m3u8->data;       
-	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-MEDIA-SEQUENCE:1\n") -  m3u8->data;
+	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-MEDIA-SEQUENCE:0\n") -  m3u8->data;
 	for( ; ; ) {
 		if (ngx_read_dir(&dir) == NGX_ERROR) {
             break;
         }
-		//printf("%s\n", ngx_de_name(&dir));
 		filename.data = ngx_de_name(&dir);
 		filename.len = ngx_de_namelen(&dir);
-		dru_pos = (u_char* )ngx_strchr(filename.data, '|');
+		dru_pos = (u_char* )ngx_strchr(filename.data, '_');
 		if (filename.data[0] == '.' || filename.len < 7) {
 			continue;
 		}
@@ -124,22 +119,17 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 			filename.data[filename.len - 2] == 't' &&
 			filename.data[filename.len - 3] == '.' &&
 			dru_pos != (u_char*)filename.data){
-			//printf(("%d\n"), (int)ngx_atoi(filename.data,dru_pos-filename.data));
 			
 			
 			m3u8->len = ngx_sprintf(m3u8->data+m3u8->len, "#EXTINF:%d,\n", 
 				(int)ngx_atoi(filename.data,dru_pos-filename.data)) - m3u8->data;
-			//printf("%s\n",m3u8->data);
 			m3u8->len = ngx_sprintf(m3u8->data+m3u8->len, "%s\n", 
-				filename.data) - m3u8->data;			
-			
-			
-			
+				filename.data) - m3u8->data;					
 		}
 
 		
 	}
-	//printf("%s\n",m3u8->data);
+	m3u8->len = ngx_sprintf(m3u8->data+m3u8->len, "#EXT-X-ENDLIST\n") - m3u8->data;
 	return m3u8;
 	
 }
@@ -151,9 +141,14 @@ static ngx_int_t ngx_http_hls_handler(ngx_http_request_t *r)
 	ngx_int_t 				rc;
 	ngx_chain_t 			out;
 	locf = ngx_http_get_module_loc_conf(r,ngx_http_hls_module);
-	//printf("locf->hls_opt:%d\n",(int)locf->hls_opt);
-	//printf("request:%s\n",r->uri.data);
+
 	if(!locf->hls_opt) {
+		return NGX_DECLINED;
+	}
+	if(r->exten.len == 2 && ngx_strncasecmp(r->exten.data, (u_char *)"ts", 2) == 0) {
+		return NGX_DECLINED;
+	}
+	if(r->exten.len != 4 || ngx_strncasecmp(r->exten.data, (u_char *)"m3u8", 4) == 0) {
 		return NGX_DECLINED;
 	}
 	m3u8 = ngx_http_hls_get_m3u8(r);
@@ -172,10 +167,8 @@ static ngx_int_t ngx_http_hls_handler(ngx_http_request_t *r)
 	r->headers_out.content_length_n = m3u8->len;
 
 	r->headers_out.content_type = type;
-
+	r->headers_out.status = NGX_HTTP_OK;
 	rc = ngx_http_send_header(r);
-	    
-	rc = ngx_http_send_header(r);   
 	rc = ngx_http_output_filter(r, &out);   
 	ngx_http_finalize_request(r, rc);
 	
@@ -194,6 +187,7 @@ static ngx_int_t ngx_http_hls_init(ngx_conf_t *cf)
     if(h == NULL) {
         return NGX_ERROR;
     }
+	
 	*h = ngx_http_hls_handler;
 	return NGX_OK;
 }
