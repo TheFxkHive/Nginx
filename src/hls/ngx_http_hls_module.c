@@ -100,7 +100,7 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXTM3U\n") - m3u8->data;
 	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-VERSION:2\n") - m3u8->data;      
 	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-TARGETDURATION:10\n") - m3u8->data;       
-	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-MEDIA-SEQUENCE:0\n") -  m3u8->data;
+	m3u8->len = ngx_sprintf(m3u8->data + m3u8->len, "#EXT-X-MEDIA-SEQUENCE:1\n") -  m3u8->data;
 	for( ; ; ) {
 		if (ngx_read_dir(&dir) == NGX_ERROR) {
             break;
@@ -145,18 +145,18 @@ static ngx_int_t ngx_http_hls_handler(ngx_http_request_t *r)
 	if(!locf->hls_opt) {
 		return NGX_DECLINED;
 	}
-	if(r->exten.len == 2 && ngx_strncasecmp(r->exten.data, (u_char *)"ts", 2) == 0) {
-		return NGX_DECLINED;
-	}
-	if(r->exten.len != 4 || ngx_strncasecmp(r->exten.data, (u_char *)"m3u8", 4) == 0) {
-		return NGX_DECLINED;
-	}
+
 	m3u8 = ngx_http_hls_get_m3u8(r);
 
 	if(!m3u8) {
 		return NGX_DECLINED;
 	}
-
+	if(r->exten.len == 2 && ngx_strncasecmp(r->exten.data, (u_char *)"ts", 2) == 0) {
+ 		return NGX_DECLINED;
+ 	}
+ 	if(r->exten.len != 4 || ngx_strncasecmp(r->exten.data, (u_char *)"m3u8", 4) != 0) {
+ 		return NGX_DECLINED;
+ 	}
 	buf = ngx_create_temp_buf(r->pool, m3u8->len);
 	ngx_snprintf(buf->pos, m3u8->len, "%V", m3u8);
 	buf->last = buf->pos + m3u8->len;
