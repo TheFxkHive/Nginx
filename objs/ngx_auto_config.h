@@ -1,4 +1,4 @@
-#define NGX_CONFIGURE " --prefix=/opt/nginx"
+#define NGX_CONFIGURE " --prefix=/opt/nginx --add-module=src/hls"
 
 #ifndef NGX_COMPILER
 #define NGX_COMPILER  "gcc 4.8.5 20150623 (Red Hat 4.8.5-11) (GCC) "

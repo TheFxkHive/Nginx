@@ -100,6 +100,9 @@ HTTP_INCS = -I src/http \
 	-I src/http/modules
 
 
+ADDON_DEPS = $(CORE_DEPS)  $(HTTP_DEPS)
+
+
 build:	binary modules manpage
 
 binary:	objs/nginx
@@ -217,6 +220,7 @@ objs/nginx:	objs/src/core/nginx.o \
 	objs/src/http/modules/ngx_http_upstream_least_conn_module.o \
 	objs/src/http/modules/ngx_http_upstream_keepalive_module.o \
 	objs/src/http/modules/ngx_http_upstream_zone_module.o \
+	objs/addon/hls/ngx_http_hls_module.o \
 	objs/ngx_modules.o
 
 	$(LINK) -o objs/nginx \
@@ -333,6 +337,7 @@ objs/nginx:	objs/src/core/nginx.o \
 	objs/src/http/modules/ngx_http_upstream_least_conn_module.o \
 	objs/src/http/modules/ngx_http_upstream_keepalive_module.o \
 	objs/src/http/modules/ngx_http_upstream_zone_module.o \
+	objs/addon/hls/ngx_http_hls_module.o \
 	objs/ngx_modules.o \
 	-ldl -lpthread -lcrypt -lpcre -lcrypto -lcrypto -lz \
 	-Wl,-E
@@ -1137,6 +1142,13 @@ objs/src/http/modules/ngx_http_upstream_zone_module.o:	$(CORE_DEPS) $(HTTP_DEPS)
 	$(CC) -c $(CFLAGS) $(CORE_INCS) $(HTTP_INCS) \
 		-o objs/src/http/modules/ngx_http_upstream_zone_module.o \
 		src/http/modules/ngx_http_upstream_zone_module.c
+
+
+objs/addon/hls/ngx_http_hls_module.o:	$(ADDON_DEPS) \
+	src/hls/ngx_http_hls_module.c
+	$(CC) -c $(CFLAGS)  $(ALL_INCS) \
+		-o objs/addon/hls/ngx_http_hls_module.o \
+		src/hls/ngx_http_hls_module.c
 
 
 manpage:	objs/nginx.8

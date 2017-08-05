@@ -2,11 +2,12 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-#define NGX_DEFUALT_M3U8_SIZE 4096
+
+#define DEFAULT_M3U8_SIZE 4096
 
 typedef struct {
 	ngx_flag_t hls_opt;
-	ngx_int_t  hls_m3u8_size;
+	ngx_int_t hls_m3u8_size;
 }ngx_http_hls_loc_conf_t;
 
 
@@ -29,7 +30,7 @@ static ngx_command_t ngx_http_hls_commands[] = {
 	},
 		{
 		ngx_string("hls_m3u8_size"),
-		NGX_HTTP_LOC_CONF|NGX_CONF_FLAG|NGX_CONF_TAKE1,
+		NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
 		ngx_conf_set_num_slot,
 		NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(ngx_http_hls_loc_conf_t,hls_m3u8_size),
@@ -90,7 +91,12 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 	ngx_str_t 			 filename;
 	u_char				 *dru_pos;
 
-	locf = ngx_http_get_module_loc_conf(r,ngx_http_hls_module);
+	locf = ngx_http_get_module_loc_conf(r, ngx_http_hls_module);
+
+	if( !locf ) {
+		return NULL;
+	}
+
 	m3u8 = ngx_palloc(r->pool,sizeof(ngx_str_t));
 	if(!m3u8) {
 		return NULL;
@@ -102,6 +108,7 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 	
 	ngx_memset(m3u8->data, 0, locf->hls_m3u8_size);
 	m3u8->len = 0;
+
 	path.data = ngx_palloc(r->pool, 1024);
 	path.len = 0;
 	if(!path.data) {
@@ -127,7 +134,7 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 			continue;
 		}
 		/*
-		solve "duration|ts_name.ts" this file format
+		solve "duration_ts_name.ts" this file format
 		*/
 
 		if (filename.data[filename.len - 1] == 's' &&
@@ -145,6 +152,7 @@ void* ngx_http_hls_get_m3u8(ngx_http_request_t *r)
 		
 	}
 	m3u8->len = ngx_sprintf(m3u8->data+m3u8->len, "#EXT-X-ENDLIST\n") - m3u8->data;
+	printf("%s\n",m3u8->data);
 	return m3u8;
 	
 }
@@ -157,6 +165,7 @@ static ngx_int_t ngx_http_hls_handler(ngx_http_request_t *r)
 	ngx_chain_t 			out;
 	locf = ngx_http_get_module_loc_conf(r,ngx_http_hls_module);
 
+	printf("size:%d\n",(int)locf->hls_m3u8_size);
 	if(!locf->hls_opt) {
 		return NGX_DECLINED;
 	}
@@ -170,7 +179,7 @@ static ngx_int_t ngx_http_hls_handler(ngx_http_request_t *r)
 	m3u8 = ngx_http_hls_get_m3u8(r);
 
 	if(!m3u8) {
-		return NGX_DECLINED;
+		return NGX_ERROR;
 	}
 
 	buf = ngx_create_temp_buf(r->pool, m3u8->len);
@@ -218,7 +227,9 @@ static void* ngx_http_hls_create_loc_conf(ngx_conf_t *cf)
 	}
 
 	conf->hls_opt = NGX_CONF_UNSET;
-	conf->hls_m3u8 = NGX_CONF_UNSET;
+
+	conf->hls_m3u8_size = NGX_CONF_UNSET;
+
 	return conf;
 }
 static char* ngx_http_hls_merge_loc_conf(ngx_conf_t *cf, void* parent, void* child)
@@ -227,7 +238,10 @@ static char* ngx_http_hls_merge_loc_conf(ngx_conf_t *cf, void* parent, void* chi
 	ngx_http_hls_loc_conf_t *conf = child;
 
 	ngx_conf_merge_value(conf->hls_opt, prev->hls_opt, 0);
-	ngx_conf_merge_value(conf->hls_m3u8_size, prev->hls_m3u8_size, NGX_DEFUALT_M3U8_SIZE);
+	ngx_conf_merge_value(conf->hls_m3u8_size, prev->hls_m3u8_size, DEFAULT_M3U8_SIZE);
+
+
+
 	return NGX_CONF_OK;
 }
 
