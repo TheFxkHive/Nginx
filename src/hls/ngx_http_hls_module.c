@@ -25,16 +25,16 @@ static ngx_command_t ngx_http_hls_commands[] = {
 		NGX_HTTP_LOC_CONF|NGX_CONF_FLAG|NGX_CONF_TAKE1,
 		ngx_conf_set_flag_slot,
 		NGX_HTTP_LOC_CONF_OFFSET,
-        offsetof(ngx_http_hls_loc_conf_t,hls_opt),
-        NULL,
+        	offsetof(ngx_http_hls_loc_conf_t,hls_opt),
+        	NULL,
 	},
-		{
+	{
 		ngx_string("hls_m3u8_size"),
 		NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
 		ngx_conf_set_num_slot,
 		NGX_HTTP_LOC_CONF_OFFSET,
-        offsetof(ngx_http_hls_loc_conf_t,hls_m3u8_size),
-        NULL,
+        	offsetof(ngx_http_hls_loc_conf_t,hls_m3u8_size),
+        	NULL,
 	},
     ngx_null_command
 };
