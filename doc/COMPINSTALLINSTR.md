@@ -122,24 +122,24 @@
 
 
 # Nginx配置说明  
-	#user  nobody;  
-	#指定nginx运行的用户及用户组，默认为nobody 
+	\# user  nobody;  
+	\# 指定nginx运行的用户及用户组，默认为nobody 
 	worker_processes  1;  
 	#nginx进程数，建议设置为等于CPU总核心数。
 	
-	#error_log  logs/error.log;
-	#error_log  logs/error.log  notice;
-	#error_log  logs/error.log  info;
-	#定于全局错误日志文件，级别以notice显示。还有debug、info、warn、error、crit模式，debug输出最多，crit输出最少，更加实际环境而定。
+	\# error_log  logs/error.log;
+	\# error_log  logs/error.log  notice;
+	\# error_log  logs/error.log  info;
+	\# 定于全局错误日志文件，级别以notice显示。还有debug、info、warn、error、crit模式，debug输出最多，crit输出最少，更加实际环境而定。
 
-	#pid        logs/nginx.pid;
+	\# pid        logs/nginx.pid;
 	#指定进程id的存储文件位置
 	
 	worker_rlimit_nofile 655355;  
-	#指定一个nginx进程打开的最多文件描述符数目，受系统进程的最大打开文件描述符的数量限制
-																		events {
+	\# 指定一个nginx进程打开的最多文件描述符数目，受系统进程的最大打开文件描述符的数量限制
+	events {
 		use epoll;
-		#参考事件模型，use [kqeue | rtsing | epoll |/dev/poll| select | poll],epoll模型是Linux2.6以上版本内核中的高性能网络I/O模型，			如果跑在FreeBSD上，就用kqueue;
+		\# 参考事件模型，use [kqeue | rtsing | epoll |/dev/poll| select | poll],epoll模型是Linux2.6以上版本内核中的高性能网络I/O模型，			如果跑在FreeBSD上，就用kqueue;
 		worker_connections  1024;  
 		#定义每个进程的最大连接数，受系统进程的最大打开文件描述符数量的限制,(最大连接数=连接*进程数)
 	
@@ -148,94 +148,93 @@
 	//设定http服务器
 	http {
 		include       mime.types;  
-		#文件扩展名与文件型映射表
+		\# 文件扩展名与文件型映射表
 		
 		default_type  application/octet-stream;
-		#默认文件类型
+		\# 默认文件类型
 		
-		#log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-		#'$status $body_bytes_sent "$http_referer" '
-		#'"$http_user_agent" "$http_x_forwarded_for"';
+		\# log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+		\# '$status $body_bytes_sent "$http_referer" '
+		\# '"$http_user_agent" "$http_x_forwarded_for"';
 
 		#access_log  logs/access.log  main;
 
 		sendfile        on;
-		#tcp_nopush     on;
+		\# tcp_nopush     on;
 
 		#keepalive_timeout  0;
 		keepalive_timeout  65;
 
-		#gzip  on;
+		\# gzip  on;
 
 		server {
 		 listen       80;
 		server_name  localhost;
-		#charset koi8-r;
-		#access_log  logs/host.access.log  main;
+		\# charset koi8-r;
+		\# access_log  logs/host.access.log  main;
 		
 		location / {
 			 root   html;
 			 index  index.html index.htm;
-			#error_page  404              /404.html;
-			# redirect server error pages to the static page /50x.html
-																				#error_page   500 502 503 504  /50x.html;
+			\#error_page  404              /404.html;
+			\# redirect server error pages to the static page /50x.html
+			\# error_page   500 502 503 504  /50x.html;
 			location = /50x.html {
 				root   html;
 			}
 			
-			# proxy the PHP scripts to Apache listening on 127.0.0.1:80
-																				#
+			\# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+			\#
 			 #location ~ \.php$ {
-			 	#proxy_pass   http://127.0.0.1;														        
+			 	#proxy_pass   http://127.0.0.1;									        
 				}
-			# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-																				#
-			#location ~ \.php$ {
-				 # root	html;
-				 # fastcgi_pass   127.0.0.1:9000;
-				# fastcgi_index  index.php;
-				# fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
-				# include        fastcgi_params;
-				#
-			#}
+			\# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+			\#
+			\#location ~ \.php$ {
+				\# root	html;
+				\# fastcgi_pass   127.0.0.1:9000;
+				\# fastcgi_index  index.php;
+				\# fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+				\# include        fastcgi_params;
+				\#
+			\#}
 			
-			# deny access to .htaccess files, if Apache's document root
-			# concurs with nginx's one
-			#
-			#location ~ /\.ht {
-			#    deny  all;
-			#}
-																	 	}
-
-	 # another virtual host using mix of IP-, name-, and port-based configuration
-	 #
-	 #server {
-	 	#    listen       8000;
-		#    listen       somename:8080;
-		#    server_name  somename  alias  another.alias;
-																
-		#    location / {
-																				#        root   html;
-																				#        index  index.html index.htm;
-																				#    }
-																		#}
-																		# HTTPS server
-																		#
-																			#server {
-																				#    listen       443 ssl;
-			#    server_name  localhost;
-			#    ssl_certificate      cert.pem;
-			#    ssl_certificate_key  cert.key;
-			#    ssl_session_cache    shared:SSL:1m;
-			#    ssl_session_timeout  5m;
-			#    ssl_ciphers  HIGH:!aNULL:!MD5;
-			#    ssl_prefer_server_ciphers  on;
-																				#    location / {
-																					#        root   html;
-																					#        index  index.html index.htm;
-																				#    }
-																			#}
+			\# deny access to .htaccess files, if Apache's document root
+			\# concurs with nginx's one
+			\#
+			\# location ~ /\.ht {
+			\#    deny  all;
+			\#}
 	}
+
+	 \# another virtual host using mix of IP-, name-, and port-based configuration
+	 \#
+	 \# server {
+	 	\# listen       8000;
+		\# listen       somename:8080;
+		\# server_name  somename  alias  another.alias;
+																
+		\# location / {
+			\# root   html;
+			\# ndex  index.html index.htm;
+			\# }
+	\#}
+	\# HTTPS server
+	\# server {												
+			\# listen       443 ssl;
+			\# server_name  localhost;
+			\# ssl_certificate      cert.pem;
+			\# ssl_certificate_key  cert.key;
+			\# ssl_session_cache    shared:SSL:1m;
+			\# ssl_session_timeout  5m;
+			\# ssl_ciphers  HIGH:!aNULL:!MD5;
+			\# ssl_prefer_server_ciphers  on;
+			\# ocation / {
+				\# root   html;
+				\# index  index.html index.html					
+			\# }				
+		\#}
+	\#}
 
 
 
